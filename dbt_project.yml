@@ -7,6 +7,11 @@ require-dbt-version: [">=1.10.0"]
 
 profile: nfl
 
+# Links this repo to the dbt platform project NFL.
+# Account wyatts_dbt, host ib010.us1.dbt.com.
+dbt-cloud:
+  project-id: 70506183172586
+
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]

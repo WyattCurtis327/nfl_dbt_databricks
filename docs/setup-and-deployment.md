@@ -202,20 +202,26 @@ git commit -m "Add the NFL dbt project"
 
 Create an empty GitHub repo (or use the Git host already connected to your dbt account) and push this folder. In dbt platform the Git connection has to be able to read that repo.
 
-### 7.2 Create the dbt platform project
+### 7.2 The platform project
 
-1. Open your dbt account in the browser.
-2. **Account settings → Projects → New project**.
-3. Name it `NFL`.
-4. Connection type: **Databricks**.
-5. Server hostname: `dbc-89a97ed5-5f7d.cloud.databricks.com`
-6. HTTP path: `/sql/1.0/warehouses/abae422499df211c`
-7. Catalog: `nfl` (optional on the connection form; this project also sets `+catalog: nfl` in `dbt_project.yml`).
-8. Save, then connect the Git repo from step 7.1. Use the subdirectory only if you did not put `dbt_project.yml` at the repo root. In this folder it is at the root.
+Account `wyatts_dbt` (`https://ib010.us1.dbt.com`) allows one active project. A second project named NFL was rejected with "You can only have 1 active project on this plan." The existing Partner Connect project was renamed to **NFL**.
+
+| | |
+|---|---|
+| Project id | `70506183172586` |
+| Connection | Databricks, host `dbc-89a97ed5-5f7d.cloud.databricks.com`, HTTP path `/sql/1.0/warehouses/abae422499df211c`, catalog `nfl` |
+| Development | environment `70506183161912`, dbt version `fusion-stable` |
+| Deployment | environment `70506183161913`, dbt version `fusion-stable` |
+| Job | `NFL` (`70506183141641`), commands `dbt build`, generate docs on, schedule off |
+| Git | dbt-managed repo `dbt-cloud-managed-repositories/dbt-cloud-70506183168933-databricks-partner-connect-trial-repo` |
+
+Do not create another project on this plan. To deploy the models in this folder, connect the Git repo from 7.1 in the NFL project, or develop in that managed repo. `dbt_project.yml` already has `dbt-cloud.project-id` set to this project.
 
 Development credentials, for the Studio IDE, can be your own Databricks user. OAuth is preferred. A personal access token also works. Do not paste that token into this repo.
 
 ### 7.3 Deployment environment
+
+The deployment environment already exists (`70506183161913`, `fusion-stable`). Do not create a second one. These are the settings if you ever have to recreate it.
 
 1. **Orchestration → Environments → Create new environment**.
 2. Type: **Deployment**.
@@ -226,6 +232,8 @@ Development credentials, for the Studio IDE, can be your own Databricks user. OA
 7. Save.
 
 ### 7.4 Deploy job
+
+The job **NFL** already exists and is not scheduled. Do not create a second job. These are the settings if you ever have to recreate it.
 
 1. **Orchestration → Jobs → Create job → Deploy job**.
 2. Environment: the deployment environment from 7.3.
@@ -330,7 +338,10 @@ Dev deploys pause that trigger. Prod leaves it on.
 - `dbt build` completed: 13 tables, 45 tests, 21 metrics, 2 semantic models, 3 saved queries. `PASS=58`, `ERROR=0`.
 - `dbt parse` wrote `target/semantic_manifest.json`.
 - `databricks bundle validate --target dev` succeeded. The job was not deployed and has no schedule.
-- The dbt platform project `NFL` was **not** created. There is no saved dbt platform login on this machine. That needs the browser sign-in in section 4 and the clicks in section 7.
+- The dbt platform account `wyatts_dbt` allows one active project. The Partner Connect project was renamed to **NFL** rather than creating a second one. Project id `70506183172586`. Open it at `https://ib010.us1.dbt.com`.
+- That project already uses this workspace, the Serverless Starter Warehouse, and catalog `nfl`. Its development and deployment environments are on `fusion-stable`. The job named `NFL` runs `dbt build` and generates docs. The schedule is off.
+- The platform repo is still the dbt-managed Partner Connect repository, not this folder. Section 7.1 is how to point it at this code.
+- `C:\Users\wyatt\.dbt\dbt_cloud.yml` is installed from the credentials file already in Downloads, with the project name set to NFL.
 
 ## 10. If something fails
 
