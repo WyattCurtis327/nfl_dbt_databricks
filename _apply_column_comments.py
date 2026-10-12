@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 MANIFEST = r"c:\Users\wyatt\grok\dbt_demo2\target\manifest.json"
-BATCH = 12
+BATCH = 20
 
 
 def quote(text: str) -> str:
@@ -21,9 +21,15 @@ def main() -> int:
             desc = (meta.get("description") or "").strip()
             if not desc:
                 raise SystemExit(f"missing description for {relation}.{name}")
-            statements.append(
-                f"ALTER TABLE {relation} ALTER COLUMN `{name}` COMMENT '{quote(desc)}'"
-            )
+            if relation == "nfl.bronze.rosters":
+                # Materialized view. ALTER TABLE is rejected; COMMENT ON works.
+                statements.append(
+                    f"COMMENT ON COLUMN {relation}.`{name}` IS '{quote(desc)}'"
+                )
+            else:
+                statements.append(
+                    f"ALTER TABLE {relation} ALTER COLUMN `{name}` COMMENT '{quote(desc)}'"
+                )
 
     for node in manifest["nodes"].values():
         if node["resource_type"] != "model":
@@ -37,7 +43,16 @@ def main() -> int:
         relation = f"{source['database']}.{source['schema']}.{source['name']}"
         add(relation, source["columns"])
 
-    print(f"statements {len(statements)}", flush=True)
+    start_at = int(os.environ.get("APPLY_START", "0"))
+    statements = statements[start_at:]
+    print(f"statements {len(statements)} start {start_at}", flush=True)
+    if os.environ.get("APPLY_DRY"):
+        for i, sql in enumerate(statements):
+            if sql.startswith("COMMENT"):
+                print("first comment", i + start_at, sql[:160])
+                print("last", start_at + len(statements) - 1, statements[-1][:120])
+                break
+        return 0
     env = os.environ.copy()
     env["DATABRICKS_CONFIG_PROFILE"] = "wyatts_databricks"
     host = env.get("DATABRICKS_HOST") or ""
@@ -59,6 +74,8 @@ def main() -> int:
             "abae422499df211c",
             "-p",
             "wyatts_databricks",
+            "--concurrency",
+            "1",
             *batch,
         ]
         completed = subprocess.run(cmd, capture_output=True, text=True, env=env)
