@@ -40,7 +40,7 @@ The semantic layer uses the latest YAML spec. It needs dbt 1.12 or newer, or dbt
 
 `team_performance_by_season` is published as the semantic model `team_performance`. The primary entity `team_season` and the time dimension `season_start` are under `derived_semantics`, because neither is a single column. `agg_time_dimension` is `season_start`, which is January 1 of that season.
 
-Simple metrics carry `agg` and `expr` on the metric. Ratio metrics (`upset_rate`, `home_cover_rate`, `win_percentage`, `points_per_game`, `points_allowed_per_game`) use `numerator` and `denominator`. The two models do not join. A positive spread means the home team was favored by that many points.
+Simple metrics carry `agg` and `expr` on the metric. Ratio metrics (`upset_rate`, `home_cover_rate`, `win_percentage`, `points_per_game`, `points_allowed_per_game`) use `numerator` and `denominator`. The two models do not join. A negative spread means the home team was favored by that many points.
 
 Query those metrics by name only after a dbt platform deploy job has published the semantic manifest. `dbt build` on Databricks materializes the tables. It does not turn on the Semantic Layer API. See the deployment doc.
 

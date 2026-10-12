@@ -144,7 +144,7 @@ databricks.yml                   bundle
 resources/nfl.job.yml            one dbt task, no schedule, dbt-databricks >=1.12
 ```
 
-A positive `spread_line` means the home team was favored by that many points.
+A negative `spread_line` means the home team was favored by that many points.
 
 `nfl.bronze.rosters` is a materialized view from another pipeline. This project writes `nfl.bronze.roster_weeks` and does not replace `rosters`.
 
