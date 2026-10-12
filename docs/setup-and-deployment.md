@@ -20,12 +20,12 @@ Two different dbt programs show up in the steps below. They are not interchangea
 
 | Program | What it is | Used for |
 |---|---|---|
-| `dbt-databricks` in `.venv` | dbt Core 1.x plus the Databricks adapter | `dbt build` on your laptop and the Databricks job |
+| `dbt-databricks` in `.venv` | dbt Core 1.12 or newer, plus the Databricks adapter | `dbt build` on your laptop and the Databricks job |
 | dbt v2, installed by the VS Code extension | The current dbt engine from dbt Labs | Editor features, and the dbt platform account after you sign in |
 
-`pip install dbt` now installs dbt v2, not dbt Core. This repo pins `dbt-databricks` so the laptop and the Databricks job run the same adapter.
+`pip install dbt` now installs dbt v2, not dbt Core. This repo pins `dbt-databricks>=1.12.0,<2.0.0` in `requirements.txt` and in `resources/nfl.job.yml`. That floor is the first Core release that parses the semantic YAML in this repo. The upper bound keeps the laptop and the Databricks job on Core rather than v2.
 
-There is no saved dbt platform session on this machine. The Databricks connection is already logged in. The dbt account sign-in is a browser step in [section 4](#4-sign-in-to-your-dbt-account) and again when you create the platform project in [section 7](#7-deploy-the-semantic-layer-on-your-dbt-account).
+The Databricks connection is already logged in. The Cloud CLI config for project NFL is `C:\Users\wyatt\.dbt\dbt_cloud.yml`. Do not commit that file. The VS Code extension keeps its own login; that step is [section 4](#4-sign-in-to-your-dbt-account). The platform project already exists. [Section 7](#7-deploy-the-semantic-layer-on-your-dbt-account) is how this folder gets deployed into it.
 
 ## 1. Confirm the Databricks account
 
@@ -65,7 +65,7 @@ python -m pip install -r requirements.txt
 dbt --version
 ```
 
-`dbt --version` should report dbt Core 1.x and `databricks` under plugins. If PowerShell blocks the activate script:
+`dbt --version` should report dbt Core 1.12 or newer and `databricks` under plugins. The semantic YAML in this repo does not parse on older 1.x releases. If PowerShell blocks the activate script:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
@@ -106,7 +106,7 @@ dbt debug
 
 ## 4. Sign in to your dbt account
 
-The dbt platform (formerly dbt Cloud) is a separate login from Databricks. Nothing under `~/.dbt` currently holds a platform token. The Cloud CLI zip in `Downloads\dbt_0.40.24_windows_amd64` is also not logged in.
+The dbt platform (formerly dbt Cloud) is a separate login from Databricks. The Cloud CLI config for project NFL is already `C:\Users\wyatt\.dbt\dbt_cloud.yml`. Do not commit it, and do not copy the token into this repo. The VS Code extension does not read that file. Sign in there if the status bar does not already show project `nfl`.
 
 1. Install Visual Studio Code if it is not installed: [https://code.visualstudio.com](https://code.visualstudio.com).
 2. Open this folder: **File → Open Folder** → `c:\Users\wyatt\grok\dbt_demo2`.
@@ -130,17 +130,18 @@ If the venv is active, `dbt` is dbt Core, and `dbt login` will not exist. Open a
 ## 5. What the project contains
 
 ```text
-dbt_project.yml          project name nfl, profile nfl
-packages.yml             no packages
-models/sources.yml       nfl.landing
-models/bronze/           landing copy plus audit columns
-models/silver/           types, filters, scores
-models/gold/             marts, time spine, semantic layer
+dbt_project.yml                  project name nfl, profile nfl, dbt >=1.12
+packages.yml                     no packages
+models/sources.yml               nfl.landing
+models/bronze/                   landing copy plus audit columns
+models/silver/                   types, filters, scores
+models/gold/schema.yml           semantic models and metrics on the gold marts
+models/gold/semantic_models.yml  saved queries only
 macros/generate_schema_name.sql
-tests/                   singular tests
-dbt_profiles/profiles.yml    Databricks job only
-databricks.yml           bundle
-resources/nfl.job.yml    one dbt task, no schedule
+tests/                           singular tests
+dbt_profiles/profiles.yml        Databricks job only
+databricks.yml                   bundle
+resources/nfl.job.yml            one dbt task, no schedule, dbt-databricks >=1.12
 ```
 
 A positive `spread_line` means the home team was favored by that many points.
@@ -148,6 +149,27 @@ A positive `spread_line` means the home team was favored by that many points.
 `nfl.bronze.rosters` is a materialized view from another pipeline. This project writes `nfl.bronze.roster_weeks` and does not replace `rosters`.
 
 `nfl.gold.game_pick_metrics` is a Unity Catalog metric view. It is not the dbt Semantic Layer. Leave it alone.
+
+### Semantic layer YAML
+
+This repo uses the latest Semantic Layer spec (dbt 1.12+ and dbt v2). Do not add a top-level `semantic_models` list, a `measures` list, or a `type_params` block. dbt 1.12 also rejects describing the same model in two YAML files, so the semantic config lives on the model and the saved queries live in their own file.
+
+| What | Where |
+|---|---|
+| Semantic model, columns, entities, dimensions, metrics | `models/gold/schema.yml` |
+| Saved queries `games_by_season`, `games_by_week`, `team_seasons` | `models/gold/semantic_models.yml` |
+| Time spine | `metricflow_time_spine` in `models/gold/schema.yml` |
+
+`game_summaries` is both the model name and the semantic model name. The primary entity `game` is the `game_id` column. `agg_time_dimension` is `gameday`, with `granularity: day` on that column. Categorical dimensions are the columns `season`, `game_type`, `home_team`, `away_team`, `over_under_result`, `is_upset`, and `beat_spread`. The `week` column is exposed as the dimension `game_week`. MetricFlow reserves the name `week`.
+
+`team_performance_by_season` is published as the semantic model `team_performance`. `season` and `team` are categorical dimensions on those columns. The primary entity `team_season` and the time dimension `season_start` are under `derived_semantics`, because each is an expression rather than one column:
+
+- `team_season` is `concat(cast(season as string), '_', team)`.
+- `season_start` is `make_date(cast(season as int), 1, 1)` at year granularity. `agg_time_dimension` points at `season_start`, so team-season `metric_time` is January 1 of that season. A January playoff game on `game_summaries` still falls in the next calendar year, because that model's `metric_time` is `gameday`.
+
+Simple metrics replace measures. `agg` and `expr` are keys on the metric. Ratio metrics use `numerator` and `denominator` directly. The ratios are `upset_rate`, `home_cover_rate`, `win_percentage`, `points_per_game`, and `points_allowed_per_game`. The two semantic models do not join: a game has two teams, so `game` and `team_season` are not the same entity.
+
+`dbt parse` writes `target/semantic_manifest.json`. On dbt 1.12.5 that file has 2 semantic models (`game_summaries`, `team_performance`), 21 metrics, and 3 saved queries. Publishing that manifest to the Semantic Layer API is section 7, not a local `dbt build`.
 
 ## 6. Build on Databricks from VS Code or the terminal
 
@@ -158,7 +180,7 @@ dbt deps
 dbt build
 ```
 
-`dbt deps` does nothing useful today (`packages.yml` is empty) and is here so the command matches the job.
+`dbt deps` does nothing useful today (`packages.yml` is empty). It is here so the command matches the Databricks job in section 8. The dbt platform job in section 7.4 runs `dbt build` only.
 
 `dbt build` runs models and tests. It replaces:
 
@@ -174,7 +196,7 @@ Check the semantic layer parses:
 dbt parse
 ```
 
-After a successful parse, `target/semantic_manifest.json` exists. That file is local. Downstream tools cannot query it until a dbt platform deploy job publishes it (section 7).
+After a successful parse, `target/semantic_manifest.json` exists. Expect 2 semantic models, 21 metrics, and 3 saved queries. That file is local. Downstream tools cannot query it until a dbt platform deploy job publishes it (section 7).
 
 Useful narrower commands:
 
@@ -190,17 +212,16 @@ The Semantic Layer API runs only in a dbt platform **deployment** environment. A
 
 You need a dbt platform plan that includes the Semantic Layer (Starter, Enterprise, or Enterprise+, including a Starter trial). Developer querying against the Semantic Layer is not available yet. Queries hit the deployment environment.
 
-### 7.1 Put the project in Git
+### 7.1 Connect this Git repo
 
-dbt platform deploys from a Git repo. This folder is not a Git repo yet.
+dbt platform deploys from a Git repo. This folder is already one. Do not run `git init` again.
 
-```powershell
-git init
-git add .
-git commit -m "Add the NFL dbt project"
-```
+| | |
+|---|---|
+| Branch | `dbt_demo4` |
+| Origin | `https://github.com/WyattCurtis327/dbt_demo2.git` |
 
-Create an empty GitHub repo (or use the Git host already connected to your dbt account) and push this folder. In dbt platform the Git connection has to be able to read that repo.
+Push this branch, then set that GitHub repo as the repository on the NFL project. Until that connection is saved, a platform job does not build this folder.
 
 ### 7.2 The platform project
 
@@ -213,9 +234,9 @@ Account `wyatts_dbt` (`https://ib010.us1.dbt.com`) allows one active project. A 
 | Development | environment `70506183161912`, dbt version `fusion-stable` |
 | Deployment | environment `70506183161913`, dbt version `fusion-stable` |
 | Job | `NFL` (`70506183141641`), commands `dbt build`, generate docs on, schedule off |
-| Git | dbt-managed repo `dbt-cloud-managed-repositories/dbt-cloud-70506183168933-databricks-partner-connect-trial-repo` |
+| Git | Not connected to `WyattCurtis327/dbt_demo2`. Connect it before a job can build this folder. |
 
-Do not create another project on this plan. To deploy the models in this folder, connect the Git repo from 7.1 in the NFL project, or develop in that managed repo. `dbt_project.yml` already has `dbt-cloud.project-id` set to this project.
+Do not create another project on this plan. A managed Partner Connect repository still exists on the account and is not the project's active repository. `dbt_project.yml` already has `dbt-cloud.project-id` set to this project.
 
 Development credentials, for the Studio IDE, can be your own Databricks user. OAuth is preferred. A personal access token also works. Do not paste that token into this repo.
 
@@ -225,7 +246,7 @@ The deployment environment already exists (`70506183161913`, `fusion-stable`). D
 
 1. **Orchestration → Environments → Create new environment**.
 2. Type: **Deployment**.
-3. dbt version: **1.6 or newer**. Use the latest 1.x release track, or **v2** if that is what the account offers. The semantic YAML in this repo is the MetricFlow spec that dbt 1.10+ parses. If the environment is on dbt v2, the job must also run `dbt docs generate` (next step).
+3. dbt version: **1.12 or newer**, or **v2** (`fusion-stable` is v2). The semantic YAML in this repo is the latest spec. It does not parse on dbt 1.11 or older. The deployment environment here is already `fusion-stable`. On v2, the job must also generate docs (next step). `dbt docs generate` is a job setting on the existing NFL job, not a separate command in the command list.
 4. Catalog: `nfl`.
 5. Schema: `default`. Custom schemas still land in `bronze`, `silver`, and `gold` because of `generate_schema_name`.
 6. Deployment credentials: a Databricks identity that can write those three schemas and read `nfl.landing`. Your user works for a personal project. A service principal is the right production identity. Create one in the Databricks account admin, add it to this workspace, grant it Databricks SQL, and use its token here. Do not commit the token.
@@ -237,21 +258,15 @@ The job **NFL** already exists and is not scheduled. Do not create a second job.
 
 1. **Orchestration → Jobs → Create job → Deploy job**.
 2. Environment: the deployment environment from 7.3.
-3. Commands, in order:
+3. Command:
 
 ```text
-dbt deps
 dbt build
-dbt parse
 ```
 
-If the environment is dbt v2, add this as well:
+Turn **Generate docs** on. On the job that exists, that is a setting, not a second command. `dbt build` parses the project as part of the run, which writes `semantic_manifest.json` for that run. `dbt docs generate` is what v2 needs before the Semantic Layer will serve the metrics, and the generate-docs setting is how this job does that.
 
-```text
-dbt docs generate
-```
-
-`dbt build` materializes the medallion and runs tests. `dbt parse` writes `semantic_manifest.json` (and `osi_document.json` on current versions). `dbt docs generate` is what v2 needs before the Semantic Layer will serve the metrics.
+When this job was updated, `dbt deps`, `dbt parse`, and `dbt docs generate` were rejected as command steps. `dbt build` was accepted. Do not add the rejected commands back unless the job editor accepts them.
 
 4. Turn on a schedule only if you want platform to refresh the tables. The Databricks job in section 8 can do that instead. Do not schedule both, or they will rebuild the same tables.
 5. **Run now**. Wait until the run is successful. The run log should show the bronze, silver, and gold models and no failing tests.
@@ -281,9 +296,9 @@ After the deploy job is green and the Semantic Layer credential is saved, a tool
 | `games`, `played_games`, `upset_rate`, `home_cover_rate`, `avg_total_score` | `game__season` or `game__game_week` |
 | `team_wins`, `win_percentage`, `points_per_game`, `team_point_differential` | `team_season__team`, `team_season__season` |
 
-Saved queries in `models/gold/semantic_models.yml`: `games_by_season`, `games_by_week`, `team_seasons`.
+Metrics are defined on the models in `models/gold/schema.yml`. Saved queries in `models/gold/semantic_models.yml`: `games_by_season`, `games_by_week`, `team_seasons`.
 
-`metric_time` on games is the calendar date, not the NFL season. A January playoff game counts in the next calendar year. Team-season `metric_time` is January 1 of that season.
+`metric_time` on games is the calendar date, not the NFL season. A January playoff game counts in the next calendar year. Team-season `metric_time` is `season_start`, January 1 of that season. Group by `game__season` or `team_season__season` when you want the NFL season rather than the calendar year.
 
 ## 8. Deploy the Databricks job
 
@@ -335,12 +350,12 @@ Dev deploys pause that trigger. Prod leaves it on.
 - Project files created in this folder.
 - `.venv` installed with dbt Core 1.12.5 and `dbt-databricks` 1.12.6.
 - `dbt debug` passed against the Serverless Starter Warehouse and catalog `nfl`.
-- `dbt build` completed: 13 tables, 45 tests, 21 metrics, 2 semantic models, 3 saved queries. `PASS=58`, `ERROR=0`.
-- `dbt parse` wrote `target/semantic_manifest.json`.
+- `dbt build` completed before the semantic YAML move: 13 tables, 45 tests. `PASS=58`, `ERROR=0`. The SQL models did not change in that move.
+- The semantic YAML is the latest spec. A later `dbt parse` on dbt 1.12.5 rewrote `target/semantic_manifest.json` with 2 semantic models (`game_summaries`, `team_performance`), 21 metrics, and 3 saved queries.
 - `databricks bundle validate --target dev` succeeded. The job was not deployed and has no schedule.
 - The dbt platform account `wyatts_dbt` allows one active project. The Partner Connect project was renamed to **NFL** rather than creating a second one. Project id `70506183172586`. Open it at `https://ib010.us1.dbt.com`.
 - That project already uses this workspace, the Serverless Starter Warehouse, and catalog `nfl`. Its development and deployment environments are on `fusion-stable`. The job named `NFL` runs `dbt build` and generates docs. The schedule is off.
-- The platform repo is still the dbt-managed Partner Connect repository, not this folder. Section 7.1 is how to point it at this code.
+- This folder is a git repo on branch `dbt_demo4` with origin `https://github.com/WyattCurtis327/dbt_demo2.git`. The NFL project's repository is not that GitHub repo, so a platform job does not build this folder until you connect it (section 7.1).
 - `C:\Users\wyatt\.dbt\dbt_cloud.yml` is installed from the credentials file already in Downloads, with the project name set to NFL.
 
 ## 10. If something fails
@@ -351,6 +366,6 @@ Dev deploys pause that trigger. Prod leaves it on.
 | `dbt login` is not a command | The active `dbt` is dbt Core. Sign in from the VS Code extension instead. |
 | `cannot configure default credentials` or OAuth errors | Re-run the `databricks auth login` command in section 1, then set `DATABRICKS_CONFIG_PROFILE` and the `https://` host fix from section 3. |
 | Warehouse timeout on the first command | The Serverless Starter Warehouse was stopped. Run the command again. |
-| Extension says the project is not v2 compliant | Use the extension's autofix, or keep building with the venv `dbt`. The YAML in this repo targets dbt 1.10+. |
+| Extension or `dbt parse` rejects `semantic_models`, `measures`, or `type_params` | This repo uses the latest spec. Metrics are on the model in `models/gold/schema.yml`. Do not put the model in that file and again in `semantic_models.yml`. |
 | Semantic Layer returns no metrics | The deploy job in section 7.4 has not succeeded in the environment selected in section 7.5. `dbt build` on the laptop is not enough. On v2, the job also needs `dbt docs generate`. |
 | Two jobs writing the same tables | Pause the `dbt_demo` job or this one. Keep a single scheduler. |
