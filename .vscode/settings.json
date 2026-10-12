@@ -2,5 +2,26 @@
   "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
   "files.associations": {
     "*.sql": "jinja-sql"
-  }
+  },
+  "files.exclude": {
+    "**/.venv": true
+  },
+  "search.exclude": {
+    "**/.venv": true,
+    "**/target": true,
+    "**/.databricks": true,
+    "**/logs": true,
+    "**/dbt_packages": true
+  },
+  "files.watcherExclude": {
+    "**/.venv/**": true,
+    "**/target/**": true,
+    "**/.databricks/**": true,
+    "**/logs/**": true,
+    "**/dbt_packages/**": true,
+    "**/__pycache__/**": true
+  },
+  "jupyter.interactiveWindow.cellMarker.codeRegex": "^# COMMAND ----------|^# Databricks notebook source|^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])",
+  "jupyter.interactiveWindow.cellMarker.default": "# COMMAND ----------",
+  "dbt.dbtMajorVersion": "v1"
 }
