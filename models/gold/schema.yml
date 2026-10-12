@@ -8,43 +8,67 @@ models:
     agg_time_dimension: gameday
     columns:
       - name: game_id
+        description: "{{ doc('col_game_id') }}"
         data_tests:
           - unique
           - not_null
         entity:
           type: primary
           name: game
-      - name: gameday
-        granularity: day
-        dimension:
-          type: time
       - name: season
+        description: "{{ doc('col_season') }}"
         dimension:
           type: categorical
       - name: week
+        description: "{{ doc('col_week') }}"
         dimension:
           type: categorical
           name: game_week
       - name: game_type
+        description: "{{ doc('col_game_type') }}"
         dimension:
           type: categorical
+      - name: gameday
+        description: "{{ doc('col_gameday_date') }}"
+        granularity: day
+        dimension:
+          type: time
       - name: home_team
+        description: "{{ doc('col_home_team') }}"
         dimension:
           type: categorical
       - name: away_team
+        description: "{{ doc('col_away_team') }}"
+        dimension:
+          type: categorical
+      - name: home_score
+        description: "{{ doc('col_home_score') }}"
+      - name: away_score
+        description: "{{ doc('col_away_score') }}"
+      - name: total_score
+        description: "{{ doc('col_total_score') }}"
+      - name: point_differential
+        description: "{{ doc('col_point_differential') }}"
+      - name: avg_spread
+        description: "{{ doc('col_avg_spread') }}"
+      - name: avg_total
+        description: "{{ doc('col_avg_total') }}"
+      - name: num_bookmakers
+        description: "{{ doc('col_num_bookmakers') }}"
+      - name: is_upset
+        description: "{{ doc('col_is_upset') }}"
+        dimension:
+          type: categorical
+      - name: beat_spread
+        description: "{{ doc('col_beat_spread') }}"
         dimension:
           type: categorical
       - name: over_under_result
+        description: "{{ doc('col_over_under_result') }}"
         data_tests:
           - accepted_values:
               arguments:
                 values: ["over", "under", "push"]
-        dimension:
-          type: categorical
-      - name: is_upset
-        dimension:
-          type: categorical
-      - name: beat_spread
         dimension:
           type: categorical
     metrics:
@@ -62,7 +86,7 @@ models:
         expr: case when home_score is not null and away_score is not null then 1 else 0 end
       - name: upsets
         label: Upsets
-        description: Played games the underdog won. A positive spread means the home team was favored by that many points.
+        description: Played games flagged by is_upset. That flag treats a positive spread as the home team being favored, which is the opposite of the stored line.
         type: simple
         agg: sum_boolean
         expr: is_upset
@@ -98,7 +122,7 @@ models:
         expr: total_score
       - name: avg_closing_spread
         label: Average closing spread
-        description: Average closing spread. Positive means the home team was favored by that many points.
+        description: Average of the closing home-team spread. Negative means the home team was favored.
         type: simple
         agg: average
         expr: avg_spread
@@ -129,21 +153,49 @@ models:
     agg_time_dimension: season_start
     columns:
       - name: season
+        description: "{{ doc('col_season') }}"
         data_tests:
           - not_null
         dimension:
           type: categorical
       - name: team
+        description: "{{ doc('col_team') }}"
         data_tests:
           - not_null
         dimension:
           type: categorical
+      - name: home_games
+        description: "{{ doc('col_home_games') }}"
+      - name: home_wins
+        description: "{{ doc('col_home_wins') }}"
+      - name: avg_home_score
+        description: "{{ doc('col_avg_home_score') }}"
+      - name: avg_home_opponent_score
+        description: "{{ doc('col_avg_home_opponent_score') }}"
+      - name: away_games
+        description: "{{ doc('col_away_games') }}"
+      - name: away_wins
+        description: "{{ doc('col_away_wins') }}"
+      - name: avg_away_score
+        description: "{{ doc('col_avg_away_score') }}"
+      - name: avg_away_opponent_score
+        description: "{{ doc('col_avg_away_opponent_score') }}"
       - name: total_games
+        description: "{{ doc('col_total_games') }}"
         data_tests:
           - not_null
       - name: total_wins
+        description: "{{ doc('col_total_wins') }}"
         data_tests:
           - not_null
+      - name: win_percentage
+        description: "{{ doc('col_win_percentage') }}"
+      - name: avg_points_scored
+        description: "{{ doc('col_avg_points_scored') }}"
+      - name: avg_points_allowed
+        description: "{{ doc('col_avg_points_allowed') }}"
+      - name: point_differential
+        description: "{{ doc('col_season_point_differential') }}"
     derived_semantics:
       entities:
         - name: team_season
@@ -216,6 +268,7 @@ models:
       standard_granularity_column: date_day
     columns:
       - name: date_day
+        description: "{{ doc('col_date_day') }}"
         granularity: day
         data_tests:
           - unique

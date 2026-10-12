@@ -5,41 +5,341 @@ models:
     description: Landing games, plus ingest audit columns. Stored as nfl.bronze.games.
     columns:
       - name: game_id
+        description: "{{ doc('col_game_id') }}"
         data_tests:
           - unique
           - not_null
+      - name: season
+        description: "{{ doc('col_season') }}"
+      - name: game_type
+        description: "{{ doc('col_game_type') }}"
+      - name: week
+        description: "{{ doc('col_week') }}"
+      - name: gameday
+        description: "{{ doc('col_gameday_text') }}"
+      - name: weekday
+        description: "{{ doc('col_weekday') }}"
+      - name: gametime
+        description: "{{ doc('col_gametime') }}"
+      - name: away_team
+        description: "{{ doc('col_away_team') }}"
+      - name: away_score
+        description: "{{ doc('col_away_score') }}"
+      - name: home_team
+        description: "{{ doc('col_home_team') }}"
+      - name: home_score
+        description: "{{ doc('col_home_score') }}"
+      - name: location
+        description: "{{ doc('col_location') }}"
+      - name: result
+        description: "{{ doc('col_result') }}"
+      - name: total
+        description: "{{ doc('col_total_points') }}"
+      - name: overtime
+        description: "{{ doc('col_overtime') }}"
+      - name: old_game_id
+        description: "{{ doc('col_old_game_id') }}"
+      - name: gsis
+        description: "{{ doc('col_gsis_game_id') }}"
+      - name: nfl_detail_id
+        description: "{{ doc('col_nfl_detail_id') }}"
+      - name: pfr
+        description: "{{ doc('col_pfr_game_id') }}"
+      - name: pff
+        description: "{{ doc('col_pff_game_id') }}"
+      - name: espn
+        description: "{{ doc('col_espn_game_id') }}"
+      - name: ftn
+        description: "{{ doc('col_ftn_game_id') }}"
+      - name: away_rest
+        description: "{{ doc('col_away_rest') }}"
+      - name: home_rest
+        description: "{{ doc('col_home_rest') }}"
+      - name: away_moneyline
+        description: "{{ doc('col_away_moneyline') }}"
+      - name: home_moneyline
+        description: "{{ doc('col_home_moneyline') }}"
+      - name: spread_line
+        description: "{{ doc('col_spread_line') }}"
+      - name: away_spread_odds
+        description: "{{ doc('col_away_spread_odds') }}"
+      - name: home_spread_odds
+        description: "{{ doc('col_home_spread_odds') }}"
+      - name: total_line
+        description: "{{ doc('col_total_line') }}"
+      - name: under_odds
+        description: "{{ doc('col_under_odds') }}"
+      - name: over_odds
+        description: "{{ doc('col_over_odds') }}"
+      - name: div_game
+        description: "{{ doc('col_div_game') }}"
+      - name: roof
+        description: "{{ doc('col_roof') }}"
+      - name: surface
+        description: "{{ doc('col_surface') }}"
+      - name: temp
+        description: "{{ doc('col_temp') }}"
+      - name: wind
+        description: "{{ doc('col_wind') }}"
+      - name: away_qb_id
+        description: "{{ doc('col_away_qb_id') }}"
+      - name: home_qb_id
+        description: "{{ doc('col_home_qb_id') }}"
+      - name: away_qb_name
+        description: "{{ doc('col_away_qb_name') }}"
+      - name: home_qb_name
+        description: "{{ doc('col_home_qb_name') }}"
+      - name: away_coach
+        description: "{{ doc('col_away_coach') }}"
+      - name: home_coach
+        description: "{{ doc('col_home_coach') }}"
+      - name: referee
+        description: "{{ doc('col_referee') }}"
+      - name: stadium_id
+        description: "{{ doc('col_stadium_id') }}"
+      - name: stadium
+        description: "{{ doc('col_stadium') }}"
+      - name: ingested_at
+        description: "{{ doc('col_ingested_at') }}"
+      - name: _source_file
+        description: "{{ doc('col_source_file') }}"
+      - name: _ingest_timestamp
+        description: "{{ doc('col_ingest_timestamp') }}"
+      - name: _source_schema
+        description: "{{ doc('col_source_schema') }}"
+      - name: _source_table
+        description: "{{ doc('col_source_table') }}"
   - name: bronze_teams
     description: Landing teams, plus ingest audit columns. Stored as nfl.bronze.teams.
     columns:
-      - name: team
-        data_tests:
-          - not_null
       - name: season
+        description: "{{ doc('col_season') }}"
         data_tests:
           - not_null
+      - name: team
+        description: "{{ doc('col_team') }}"
+        data_tests:
+          - not_null
+      - name: nfl
+        description: "{{ doc('col_team_nfl') }}"
+      - name: nfl_team_id
+        description: "{{ doc('col_nfl_team_id') }}"
+      - name: espn
+        description: "{{ doc('col_team_espn') }}"
+      - name: pfr
+        description: "{{ doc('col_team_pfr') }}"
+      - name: pff
+        description: "{{ doc('col_team_pff') }}"
+      - name: pfflabel
+        description: "{{ doc('col_pfflabel') }}"
+      - name: fo
+        description: "{{ doc('col_fo') }}"
+      - name: full
+        description: "{{ doc('col_full') }}"
+      - name: location
+        description: "{{ doc('col_team_location') }}"
+      - name: short_location
+        description: "{{ doc('col_short_location') }}"
+      - name: nickname
+        description: "{{ doc('col_nickname') }}"
+      - name: hyphenated
+        description: "{{ doc('col_hyphenated') }}"
+      - name: sbr
+        description: "{{ doc('col_sbr') }}"
+      - name: sbr_wins
+        description: "{{ doc('col_sbr_wins') }}"
+      - name: sbr_name
+        description: "{{ doc('col_sbr_name') }}"
+      - name: draft_kings
+        description: "{{ doc('col_draft_kings') }}"
+      - name: ingested_at
+        description: "{{ doc('col_ingested_at') }}"
+      - name: _source_file
+        description: "{{ doc('col_source_file') }}"
+      - name: _ingest_timestamp
+        description: "{{ doc('col_ingest_timestamp') }}"
+      - name: _source_schema
+        description: "{{ doc('col_source_schema') }}"
+      - name: _source_table
+        description: "{{ doc('col_source_table') }}"
   - name: bronze_players
     description: Landing players, plus ingest audit columns. Stored as nfl.bronze.players.
     columns:
       - name: player_id
+        description: "{{ doc('col_player_id') }}"
         data_tests:
           - unique
           - not_null
+      - name: gsis_id
+        description: "{{ doc('col_gsis_id') }}"
+      - name: full_name
+        description: "{{ doc('col_full_name') }}"
+      - name: player_label
+        description: "{{ doc('col_player_label') }}"
+      - name: name_collision
+        description: "{{ doc('col_name_collision') }}"
+      - name: team
+        description: "{{ doc('col_team') }}"
+      - name: position
+        description: "{{ doc('col_player_position') }}"
+      - name: jersey_number
+        description: "{{ doc('col_jersey_number') }}"
+      - name: status
+        description: "{{ doc('col_player_status') }}"
+      - name: espn_id
+        description: "{{ doc('col_espn_id') }}"
+      - name: season
+        description: "{{ doc('col_season') }}"
+      - name: week
+        description: "{{ doc('col_player_week') }}"
+      - name: ingested_at
+        description: "{{ doc('col_ingested_at') }}"
+      - name: _source_file
+        description: "{{ doc('col_source_file') }}"
+      - name: _ingest_timestamp
+        description: "{{ doc('col_ingest_timestamp') }}"
+      - name: _source_schema
+        description: "{{ doc('col_source_schema') }}"
+      - name: _source_table
+        description: "{{ doc('col_source_table') }}"
   - name: bronze_game_odds
     description: Landing closing lines, plus ingest audit columns. Stored as nfl.bronze.game_odds.
     columns:
       - name: game_id
+        description: "{{ doc('col_game_id') }}"
         data_tests:
           - unique
           - not_null
+      - name: season
+        description: "{{ doc('col_season') }}"
+      - name: week
+        description: "{{ doc('col_week') }}"
+      - name: game_type
+        description: "{{ doc('col_game_type') }}"
+      - name: gameday
+        description: "{{ doc('col_gameday_text') }}"
+      - name: home_team
+        description: "{{ doc('col_home_team') }}"
+      - name: away_team
+        description: "{{ doc('col_away_team') }}"
+      - name: spread_line
+        description: "{{ doc('col_spread_line') }}"
+      - name: total_line
+        description: "{{ doc('col_total_line') }}"
+      - name: away_moneyline
+        description: "{{ doc('col_away_moneyline') }}"
+      - name: home_moneyline
+        description: "{{ doc('col_home_moneyline') }}"
+      - name: away_spread_odds
+        description: "{{ doc('col_away_spread_odds') }}"
+      - name: home_spread_odds
+        description: "{{ doc('col_home_spread_odds') }}"
+      - name: under_odds
+        description: "{{ doc('col_under_odds') }}"
+      - name: over_odds
+        description: "{{ doc('col_over_odds') }}"
+      - name: source
+        description: "{{ doc('col_odds_source') }}"
+      - name: bookmaker
+        description: "{{ doc('col_bookmaker') }}"
+      - name: ingested_at
+        description: "{{ doc('col_ingested_at') }}"
+      - name: _source_file
+        description: "{{ doc('col_source_file') }}"
+      - name: _ingest_timestamp
+        description: "{{ doc('col_ingest_timestamp') }}"
+      - name: _source_schema
+        description: "{{ doc('col_source_schema') }}"
+      - name: _source_table
+        description: "{{ doc('col_source_table') }}"
   - name: bronze_roster_weeks
     description: Landing weekly rosters, plus ingest audit columns. Stored as nfl.bronze.roster_weeks. Does not replace nfl.bronze.rosters.
     columns:
       - name: season
-        data_tests:
-          - not_null
-      - name: week
+        description: "{{ doc('col_season') }}"
         data_tests:
           - not_null
       - name: team
+        description: "{{ doc('col_team') }}"
         data_tests:
           - not_null
+      - name: position
+        description: "{{ doc('col_player_position') }}"
+      - name: depth_chart_position
+        description: "{{ doc('col_depth_chart_position') }}"
+      - name: jersey_number
+        description: "{{ doc('col_jersey_number') }}"
+      - name: status
+        description: "{{ doc('col_roster_status') }}"
+      - name: full_name
+        description: "{{ doc('col_full_name') }}"
+      - name: first_name
+        description: "{{ doc('col_first_name') }}"
+      - name: last_name
+        description: "{{ doc('col_last_name') }}"
+      - name: birth_date
+        description: "{{ doc('col_birth_date_text') }}"
+      - name: height
+        description: "{{ doc('col_height') }}"
+      - name: weight
+        description: "{{ doc('col_weight') }}"
+      - name: college
+        description: "{{ doc('col_college') }}"
+      - name: gsis_id
+        description: "{{ doc('col_gsis_id') }}"
+      - name: espn_id
+        description: "{{ doc('col_espn_id') }}"
+      - name: sportradar_id
+        description: "{{ doc('col_sportradar_id') }}"
+      - name: yahoo_id
+        description: "{{ doc('col_yahoo_id') }}"
+      - name: rotowire_id
+        description: "{{ doc('col_rotowire_id') }}"
+      - name: pff_id
+        description: "{{ doc('col_pff_player_id') }}"
+      - name: pfr_id
+        description: "{{ doc('col_pfr_player_id') }}"
+      - name: fantasy_data_id
+        description: "{{ doc('col_fantasy_data_id') }}"
+      - name: sleeper_id
+        description: "{{ doc('col_sleeper_id') }}"
+      - name: years_exp
+        description: "{{ doc('col_years_exp') }}"
+      - name: headshot_url
+        description: "{{ doc('col_headshot_url') }}"
+      - name: ngs_position
+        description: "{{ doc('col_ngs_position') }}"
+      - name: week
+        description: "{{ doc('col_week') }}"
+        data_tests:
+          - not_null
+      - name: game_type
+        description: "{{ doc('col_game_type') }}"
+      - name: status_description_abbr
+        description: "{{ doc('col_status_description_abbr') }}"
+      - name: football_name
+        description: "{{ doc('col_football_name') }}"
+      - name: esb_id
+        description: "{{ doc('col_esb_id') }}"
+      - name: gsis_it_id
+        description: "{{ doc('col_gsis_it_id') }}"
+      - name: smart_id
+        description: "{{ doc('col_smart_id') }}"
+      - name: entry_year
+        description: "{{ doc('col_entry_year') }}"
+      - name: rookie_year
+        description: "{{ doc('col_rookie_year') }}"
+      - name: draft_club
+        description: "{{ doc('col_draft_club') }}"
+      - name: draft_number
+        description: "{{ doc('col_draft_number') }}"
+      - name: ingested_at
+        description: "{{ doc('col_ingested_at') }}"
+      - name: _source_file
+        description: "{{ doc('col_source_file') }}"
+      - name: _ingest_timestamp
+        description: "{{ doc('col_ingest_timestamp') }}"
+      - name: _source_schema
+        description: "{{ doc('col_source_schema') }}"
+      - name: _source_table
+        description: "{{ doc('col_source_table') }}"
