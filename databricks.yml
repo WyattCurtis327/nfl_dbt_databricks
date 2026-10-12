@@ -1,0 +1,20 @@
+# Declarative Automation Bundle. Deploys the NFL dbt job to Databricks.
+# https://docs.databricks.com/dev-tools/bundles/
+bundle:
+  name: nfl
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: https://dbc-89a97ed5-5f7d.cloud.databricks.com
+
+  prod:
+    mode: production
+    workspace:
+      host: https://dbc-89a97ed5-5f7d.cloud.databricks.com
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}

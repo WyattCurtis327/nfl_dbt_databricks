@@ -1,0 +1,40 @@
+version: 2
+
+models:
+  - name: game_summaries
+    description: One row per game, with the closing spread and total and whether the home team covered. Stored as nfl.gold.game_summaries.
+    columns:
+      - name: game_id
+        data_tests:
+          - unique
+          - not_null
+      - name: over_under_result
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["over", "under", "push"]
+  - name: team_performance_by_season
+    description: Wins, scoring, and point differential for games that have a final score. Stored as nfl.gold.team_performance_by_season.
+    columns:
+      - name: season
+        data_tests:
+          - not_null
+      - name: team
+        data_tests:
+          - not_null
+      - name: total_games
+        data_tests:
+          - not_null
+      - name: total_wins
+        data_tests:
+          - not_null
+  - name: metricflow_time_spine
+    description: One row per day. MetricFlow uses it to aggregate the gold semantic models by time.
+    time_spine:
+      standard_granularity_column: date_day
+    columns:
+      - name: date_day
+        granularity: day
+        data_tests:
+          - unique
+          - not_null

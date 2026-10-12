@@ -1,0 +1,22 @@
+resources:
+  jobs:
+    nfl_job:
+      name: nfl_dbt
+      # No schedule. The existing dbt_demo job already refreshes these tables.
+      # Add a trigger only after that job is retired. See docs/setup-and-deployment.md.
+      tasks:
+        - task_key: dbt
+          environment_key: default
+          dbt_task:
+            project_directory: ../
+            profiles_directory: dbt_profiles/
+            commands:
+              - 'dbt deps --target=${bundle.target}'
+              - 'dbt build --target=${bundle.target}'
+
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "4"
+            dependencies:
+              - dbt-databricks>=1.8.0,<2.0.0

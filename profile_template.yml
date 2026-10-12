@@ -1,0 +1,19 @@
+# Prompts used by `dbt init` if you recreate the local profile.
+fixed:
+  type: databricks
+prompts:
+  host:
+    default: dbc-89a97ed5-5f7d.cloud.databricks.com
+  http_path:
+    hint: HTTP path of the SQL warehouse
+    default: /sql/1.0/warehouses/abae422499df211c
+  catalog:
+    hint: Unity Catalog catalog
+    default: nfl
+  schema:
+    hint: schema used when a model does not set one
+    default: default
+  threads:
+    hint: threads to use during development, 1 or more
+    type: int
+    default: 4

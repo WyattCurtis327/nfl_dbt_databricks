@@ -1,0 +1,4 @@
+# CLI used by this repo and by the Databricks dbt task.
+# The VS Code extension installs its own dbt v2 binary. Do not point that
+# binary at this virtual environment.
+dbt-databricks>=1.8.0,<2.0.0

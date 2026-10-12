@@ -1,0 +1,16 @@
+version: 2
+
+sources:
+  - name: landing
+    description: Raw NFL tables already loaded in Unity Catalog. This project does not ingest them.
+    database: nfl
+    schema: landing
+    tables:
+      - name: games
+        description: NFL schedule and results from the nflverse schedules release.
+      - name: teams
+      - name: players
+      - name: game_odds
+        description: Closing lines. One row per game in the current landing table.
+      - name: rosters
+        description: Weekly rosters. One row per player, team, week, and game type.

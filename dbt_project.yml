@@ -1,0 +1,34 @@
+name: nfl
+version: "1.0.0"
+config-version: 2
+
+# dbt-databricks 1.10+ on the Databricks job, and dbt v2 in VS Code.
+require-dbt-version: [">=1.10.0"]
+
+profile: nfl
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - target
+  - dbt_packages
+
+models:
+  nfl:
+    +catalog: nfl
+    +persist_docs:
+      relation: true
+    bronze:
+      +schema: bronze
+      +materialized: table
+    silver:
+      +schema: silver
+      +materialized: table
+    gold:
+      +schema: gold
+      +materialized: table
