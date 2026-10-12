@@ -11,6 +11,8 @@ profile: nfl
 # Account wyatts_dbt, host ib010.us1.dbt.com.
 dbt-cloud:
   project-id: 70506183172586
+  # Deployment environment. The extension defers to this instead of looking up a project default.
+  defer-env-id: 70506183161913
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]
