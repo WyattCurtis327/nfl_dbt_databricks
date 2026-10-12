@@ -1,0 +1,45 @@
+version: 2
+
+models:
+  - name: bronze_games
+    description: Landing games, plus ingest audit columns. Stored as nfl.bronze.games.
+    columns:
+      - name: game_id
+        data_tests:
+          - unique
+          - not_null
+  - name: bronze_teams
+    description: Landing teams, plus ingest audit columns. Stored as nfl.bronze.teams.
+    columns:
+      - name: team
+        data_tests:
+          - not_null
+      - name: season
+        data_tests:
+          - not_null
+  - name: bronze_players
+    description: Landing players, plus ingest audit columns. Stored as nfl.bronze.players.
+    columns:
+      - name: player_id
+        data_tests:
+          - unique
+          - not_null
+  - name: bronze_game_odds
+    description: Landing closing lines, plus ingest audit columns. Stored as nfl.bronze.game_odds.
+    columns:
+      - name: game_id
+        data_tests:
+          - unique
+          - not_null
+  - name: bronze_roster_weeks
+    description: Landing weekly rosters, plus ingest audit columns. Stored as nfl.bronze.roster_weeks. Does not replace nfl.bronze.rosters.
+    columns:
+      - name: season
+        data_tests:
+          - not_null
+      - name: week
+        data_tests:
+          - not_null
+      - name: team
+        data_tests:
+          - not_null

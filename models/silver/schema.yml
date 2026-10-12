@@ -1,0 +1,80 @@
+version: 2
+
+models:
+  - name: silver_games
+    description: Games with a real game date, total score, and home point differential. Stored as nfl.silver.games.
+    columns:
+      - name: game_id
+        data_tests:
+          - unique
+          - not_null
+      - name: gameday
+        data_tests:
+          - not_null
+      - name: game_type
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ["REG", "WC", "DIV", "CON", "SB"]
+      - name: home_team
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_teams')
+                field: team
+      - name: away_team
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_teams')
+                field: team
+  - name: silver_teams
+    description: Teams with a normalized full name. One row per season and team abbreviation. Stored as nfl.silver.teams.
+    columns:
+      - name: team
+        data_tests:
+          - not_null
+      - name: season
+        data_tests:
+          - not_null
+  - name: silver_players
+    description: Players with a player id. Stored as nfl.silver.players.
+    columns:
+      - name: player_id
+        data_tests:
+          - unique
+          - not_null
+  - name: silver_roster_weeks
+    description: Weekly rosters with a player id and birth date as a date. Stored as nfl.silver.roster_weeks.
+    columns:
+      - name: gsis_id
+        data_tests:
+          - not_null
+      - name: season
+        data_tests:
+          - not_null
+      - name: week
+        data_tests:
+          - not_null
+      - name: team
+        data_tests:
+          - not_null
+      - name: game_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ["REG", "WC", "DIV", "CON", "SB"]
+  - name: silver_game_odds
+    description: One closing line per game, with gameday as a date. Stored as nfl.silver.game_odds.
+    columns:
+      - name: game_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('silver_games')
+                field: game_id
