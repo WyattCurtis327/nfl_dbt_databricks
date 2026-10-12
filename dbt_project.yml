@@ -2,8 +2,8 @@ name: nfl
 version: "1.0.0"
 config-version: 2
 
-# dbt-databricks 1.10+ on the Databricks job, and dbt v2 in VS Code.
-require-dbt-version: [">=1.10.0"]
+# Latest semantic YAML needs dbt 1.12 or newer. dbt v2 in VS Code also parses it.
+require-dbt-version: [">=1.12.0"]
 
 profile: nfl
 

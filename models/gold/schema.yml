@@ -3,31 +3,213 @@ version: 2
 models:
   - name: game_summaries
     description: One row per game, with the closing spread and total and whether the home team covered. Stored as nfl.gold.game_summaries.
+    semantic_model:
+      enabled: true
+    agg_time_dimension: gameday
     columns:
       - name: game_id
         data_tests:
           - unique
           - not_null
+        entity:
+          type: primary
+          name: game
+      - name: gameday
+        granularity: day
+        dimension:
+          type: time
+      - name: season
+        dimension:
+          type: categorical
+      - name: week
+        dimension:
+          type: categorical
+          name: game_week
+      - name: game_type
+        dimension:
+          type: categorical
+      - name: home_team
+        dimension:
+          type: categorical
+      - name: away_team
+        dimension:
+          type: categorical
       - name: over_under_result
         data_tests:
           - accepted_values:
               arguments:
                 values: ["over", "under", "push"]
+        dimension:
+          type: categorical
+      - name: is_upset
+        dimension:
+          type: categorical
+      - name: beat_spread
+        dimension:
+          type: categorical
+    metrics:
+      - name: games
+        label: Games
+        description: Scheduled games, including games that have not been played.
+        type: simple
+        agg: count
+        expr: game_id
+      - name: played_games
+        label: Played games
+        description: Games with a final score.
+        type: simple
+        agg: sum
+        expr: case when home_score is not null and away_score is not null then 1 else 0 end
+      - name: upsets
+        label: Upsets
+        description: Played games the underdog won. A positive spread means the home team was favored by that many points.
+        type: simple
+        agg: sum_boolean
+        expr: is_upset
+      - name: upset_decisions
+        label: Upset decisions
+        description: Played games with a non-zero spread, so an upset can be decided.
+        type: simple
+        agg: sum
+        expr: case when is_upset is not null then 1 else 0 end
+      - name: home_covers
+        label: Home covers
+        description: Played games where the home team beat the spread.
+        type: simple
+        agg: sum_boolean
+        expr: beat_spread
+      - name: spread_decisions
+        label: Spread decisions
+        description: Played games with a spread.
+        type: simple
+        agg: sum
+        expr: case when beat_spread is not null then 1 else 0 end
+      - name: total_points
+        label: Total points
+        description: Combined points scored in played games.
+        type: simple
+        agg: sum
+        expr: total_score
+      - name: avg_total_score
+        label: Average total score
+        description: Average combined score of played games.
+        type: simple
+        agg: average
+        expr: total_score
+      - name: avg_closing_spread
+        label: Average closing spread
+        description: Average closing spread. Positive means the home team was favored by that many points.
+        type: simple
+        agg: average
+        expr: avg_spread
+      - name: avg_closing_total
+        label: Average closing total
+        description: Average closing total.
+        type: simple
+        agg: average
+        expr: avg_total
+      - name: upset_rate
+        label: Upset rate
+        description: Share of decided games that the underdog won.
+        type: ratio
+        numerator: upsets
+        denominator: upset_decisions
+      - name: home_cover_rate
+        label: Home cover rate
+        description: Share of decided games where the home team beat the spread.
+        type: ratio
+        numerator: home_covers
+        denominator: spread_decisions
+
   - name: team_performance_by_season
     description: Wins, scoring, and point differential for games that have a final score. Stored as nfl.gold.team_performance_by_season.
+    semantic_model:
+      enabled: true
+      name: team_performance
+    agg_time_dimension: season_start
     columns:
       - name: season
         data_tests:
           - not_null
+        dimension:
+          type: categorical
       - name: team
         data_tests:
           - not_null
+        dimension:
+          type: categorical
       - name: total_games
         data_tests:
           - not_null
       - name: total_wins
         data_tests:
           - not_null
+    derived_semantics:
+      entities:
+        - name: team_season
+          type: primary
+          expr: "concat(cast(season as string), '_', team)"
+      dimensions:
+        - name: season_start
+          type: time
+          granularity: year
+          expr: "make_date(cast(season as int), 1, 1)"
+    metrics:
+      - name: team_seasons
+        label: Team seasons
+        description: Team seasons with at least one played game.
+        type: simple
+        agg: count
+        expr: team
+      - name: team_wins
+        label: Wins
+        description: Wins in played games. A tie is not a win.
+        type: simple
+        agg: sum
+        expr: total_wins
+      - name: team_games
+        label: Team games
+        description: Played games.
+        type: simple
+        agg: sum
+        expr: total_games
+      - name: team_point_differential
+        label: Point differential
+        description: Points scored minus points allowed.
+        type: simple
+        agg: sum
+        expr: point_differential
+      - name: team_points_scored
+        label: Points scored
+        description: Points scored, rebuilt from the season average and games played.
+        type: simple
+        agg: sum
+        expr: avg_points_scored * total_games
+      - name: team_points_allowed
+        label: Points allowed
+        description: Points allowed, rebuilt from the season average and games played.
+        type: simple
+        agg: sum
+        expr: avg_points_allowed * total_games
+      - name: win_percentage
+        label: Win percentage
+        description: Wins divided by played games.
+        type: ratio
+        numerator: team_wins
+        denominator: team_games
+      - name: points_per_game
+        label: Points per game
+        description: Points scored per played game.
+        type: ratio
+        numerator: team_points_scored
+        denominator: team_games
+      - name: points_allowed_per_game
+        label: Points allowed per game
+        description: Points allowed per played game.
+        type: ratio
+        numerator: team_points_allowed
+        denominator: team_games
+
   - name: metricflow_time_spine
     description: One row per day. MetricFlow uses it to aggregate the gold semantic models by time.
     time_spine:
