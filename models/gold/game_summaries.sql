@@ -22,7 +22,8 @@ select
     odds.avg_spread,
     odds.avg_total,
     odds.num_bookmakers,
-    -- spread_line is points the home team is favored by. Positive means home is laying points.
+    -- spread_line is the home team closing spread. Negative means the home team was favored.
+    -- This flag still treats a positive spread as the home team being favored.
     case
         when games.home_score is null or odds.avg_spread is null or odds.avg_spread = 0 then null
         when odds.avg_spread > 0 and games.away_score > games.home_score then true

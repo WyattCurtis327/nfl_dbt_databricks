@@ -28,6 +28,7 @@ models:
     +catalog: nfl
     +persist_docs:
       relation: true
+      columns: true
     bronze:
       +schema: bronze
       +materialized: table
