@@ -3,8 +3,9 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
-MANIFEST = r"c:\Users\wyatt\grok\nfl_dbt_databricks\target\manifest.json"
+MANIFEST = Path(__file__).resolve().parent / "target" / "manifest.json"
 BATCH = 20
 
 
