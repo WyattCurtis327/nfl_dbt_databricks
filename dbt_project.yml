@@ -8,11 +8,12 @@ require-dbt-version: [">=1.12.0"]
 profile: nfl
 
 # Links this repo to the dbt platform project NFL.
-# Account wyatts_dbt, host ib010.us1.dbt.com.
+# Ids live in the gitignored .env file. dbt 1.12 and the VS Code extension load it.
+# DBT_ENV_SECRET_* cannot be used here. dbt only allows that prefix in profiles.yml.
 dbt-cloud:
-  project-id: 70506183172586
+  project-id: "{{ env_var('DBT_CLOUD_PROJECT_ID') | as_number }}"
   # Deployment environment. The extension defers to this instead of looking up a project default.
-  defer-env-id: 70506183161913
+  defer-env-id: "{{ env_var('DBT_CLOUD_DEFER_ENV_ID') | as_number }}"
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]

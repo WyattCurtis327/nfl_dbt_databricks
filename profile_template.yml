@@ -3,10 +3,9 @@ fixed:
   type: databricks
 prompts:
   host:
-    default: dbc-89a97ed5-5f7d.cloud.databricks.com
+    hint: Workspace hostname, no https://. Same value as DBT_ENV_SECRET_HOST.
   http_path:
-    hint: HTTP path of the SQL warehouse
-    default: /sql/1.0/warehouses/abae422499df211c
+    hint: HTTP path of the SQL warehouse. Same value as DBT_ENV_SECRET_HTTP_PATH.
   catalog:
     hint: Unity Catalog catalog
     default: nfl

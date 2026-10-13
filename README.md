@@ -6,9 +6,9 @@ dbt project for the NFL medallion on Databricks, plus a MetricFlow semantic laye
 |---|---|
 | dbt project | `nfl` |
 | Profile | `nfl` in `~/.dbt/profiles.yml` |
-| Workspace | `https://dbc-89a97ed5-5f7d.cloud.databricks.com` |
-| CLI profile | `wyatts_databricks` |
-| Warehouse | Serverless Starter Warehouse (`abae422499df211c`) |
+| Workspace | `DBT_ENV_SECRET_HOST` in `.env` |
+| CLI profile | `DATABRICKS_CONFIG_PROFILE` in `.env` |
+| Warehouse HTTP path | `DBT_ENV_SECRET_HTTP_PATH` in `.env` |
 | Catalog | `nfl` |
 
 Bronze, silver, and gold tables are written in the `nfl` catalog. Sources are the tables already in `nfl.landing`. This project does not reload them.
@@ -48,8 +48,12 @@ Query those metrics by name only after a dbt platform deploy job has published t
 
 ## Run locally
 
+Copy `.env.example` to `.env` and fill in the values. `.env` is gitignored. dbt 1.12 and the VS Code extension load it from this folder. Names that start with `DBT_ENV_SECRET_` are replaced with `*****` in dbt logs.
+
 ```powershell
-$env:DATABRICKS_CONFIG_PROFILE = "wyatts_databricks"
+if (-not $env:DATABRICKS_CONFIG_PROFILE) {
+  throw "Set DATABRICKS_CONFIG_PROFILE. See .env.example."
+}
 if ($env:DATABRICKS_HOST -and $env:DATABRICKS_HOST -notlike "http*") {
   $env:DATABRICKS_HOST = "https://$($env:DATABRICKS_HOST)"
 }
@@ -58,4 +62,4 @@ dbt deps
 dbt build
 ```
 
-OAuth uses the Databricks CLI login for `wyatts_databricks`. No token is stored in the profile. Re-run `databricks auth login --host https://dbc-89a97ed5-5f7d.cloud.databricks.com --profile wyatts_databricks` if that login expires.
+OAuth uses the Databricks CLI login for `DATABRICKS_CONFIG_PROFILE`. No token is stored in the profile. Re-run `databricks auth login --host "https://$env:DBT_ENV_SECRET_HOST" --profile $env:DATABRICKS_CONFIG_PROFILE` if that login expires.

@@ -55,8 +55,13 @@ def main() -> int:
                 break
         return 0
     env = os.environ.copy()
-    env["DATABRICKS_CONFIG_PROFILE"] = "wyatts_databricks"
-    host = env.get("DATABRICKS_HOST") or ""
+    profile = env.get("DATABRICKS_CONFIG_PROFILE")
+    http_path = env.get("DBT_HTTP_PATH") or env.get("DBT_ENV_SECRET_HTTP_PATH")
+    if not profile or not http_path:
+        raise SystemExit("Set DATABRICKS_CONFIG_PROFILE and DBT_HTTP_PATH")
+    warehouse_id = http_path.rstrip("/").split("/")[-1]
+    env["DATABRICKS_CONFIG_PROFILE"] = profile
+    host = env.get("DATABRICKS_HOST") or env.get("DBT_HOST") or ""
     if host and not host.startswith("http"):
         env["DATABRICKS_HOST"] = "https://" + host
 
@@ -72,9 +77,9 @@ def main() -> int:
             "--output",
             "json",
             "-w",
-            "abae422499df211c",
+            warehouse_id,
             "-p",
-            "wyatts_databricks",
+            profile,
             "--concurrency",
             "1",
             *batch,

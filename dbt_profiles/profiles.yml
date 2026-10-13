@@ -1,7 +1,7 @@
 # Used by the Databricks dbt task only. The job injects DBT_HOST and
-# DBT_ACCESS_TOKEN. Your laptop uses ~/.dbt/profiles.yml instead.
-#
-# Warehouse: Serverless Starter Warehouse (abae422499df211c)
+# DBT_ACCESS_TOKEN. It does not inject the warehouse path, so set
+# DBT_HTTP_PATH on that job before it runs. Your laptop uses
+# ~/.dbt/profiles.yml instead, which reads DBT_ENV_SECRET_* from .env.
 # Catalog: nfl
 nfl:
   target: dev
@@ -12,7 +12,7 @@ nfl:
       catalog: nfl
       schema: default
       host: "{{ env_var('DBT_HOST') }}"
-      http_path: /sql/1.0/warehouses/abae422499df211c
+      http_path: "{{ env_var('DBT_HTTP_PATH') }}"
       token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
       threads: 4
 
@@ -22,6 +22,6 @@ nfl:
       catalog: nfl
       schema: default
       host: "{{ env_var('DBT_HOST') }}"
-      http_path: /sql/1.0/warehouses/abae422499df211c
+      http_path: "{{ env_var('DBT_HTTP_PATH') }}"
       token: "{{ env_var('DBT_ACCESS_TOKEN') }}"
       threads: 4

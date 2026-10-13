@@ -6,15 +6,16 @@ This is the setup that matches this repo and the accounts already on this machin
 |---|---|
 | dbt project name | `nfl` |
 | dbt profile name | `nfl` |
-| Databricks user | `wyatt_curtis@hotmail.com` |
-| Databricks CLI profile | `wyatts_databricks` (the only valid profile) |
-| Workspace | `https://dbc-89a97ed5-5f7d.cloud.databricks.com` |
-| SQL warehouse | Serverless Starter Warehouse |
-| Warehouse id | `abae422499df211c` |
-| HTTP path | `/sql/1.0/warehouses/abae422499df211c` |
+| Databricks CLI profile | `DATABRICKS_CONFIG_PROFILE` |
+| Workspace host | `DBT_ENV_SECRET_HOST` |
+| HTTP path | `DBT_ENV_SECRET_HTTP_PATH` |
+| dbt platform project id | `DBT_CLOUD_PROJECT_ID` |
+| dbt platform defer environment | `DBT_CLOUD_DEFER_ENV_ID` |
 | Catalog | `nfl` |
 | Source schema | `nfl.landing` |
 | Target schemas | `nfl.bronze`, `nfl.silver`, `nfl.gold` |
+
+Account-specific values are environment variables in `.env` (copy from `.env.example`). Do not commit `.env`. dbt replaces any `DBT_ENV_SECRET_` value with `*****` in its logs. That prefix is only allowed in `profiles.yml`, so the dbt platform ids use the `DBT_CLOUD_` names instead.
 
 Two different dbt programs show up in the steps below. They are not interchangeable.
 
@@ -29,18 +30,18 @@ The Databricks connection is already logged in. The Cloud CLI config for project
 
 ## 1. Confirm the Databricks account
 
-Databricks CLI v1.10 is already installed. The valid profile is `wyatts_databricks`. The other profiles (`prod`, `prod-476a24c0`, `prod-1b8eedfc`) point at the same workspace and are not valid. Do not use them.
+Databricks CLI v1.10 is already installed. Use the profile named in `DATABRICKS_CONFIG_PROFILE`. Other profiles on this machine are not valid. Do not use them.
 
 ```powershell
 databricks --version
 databricks auth profiles
-databricks current-user me --profile wyatts_databricks
+databricks current-user me --profile $env:DATABRICKS_CONFIG_PROFILE
 ```
 
-If `wyatts_databricks` is no longer valid, log in again. This opens a browser as `wyatt_curtis@hotmail.com`.
+If that profile is no longer valid, log in again. This opens a browser for the workspace user.
 
 ```powershell
-databricks auth login --host https://dbc-89a97ed5-5f7d.cloud.databricks.com --profile wyatts_databricks
+databricks auth login --host "https://$env:DBT_ENV_SECRET_HOST" --profile $env:DATABRICKS_CONFIG_PROFILE
 ```
 
 The catalog `nfl` and the schemas `landing`, `bronze`, `silver`, and `gold` already exist. Do not create a second catalog. The Serverless Starter Warehouse already exists. Do not create a second warehouse.
@@ -84,8 +85,8 @@ nfl:
       type: databricks
       catalog: nfl
       schema: default
-      host: dbc-89a97ed5-5f7d.cloud.databricks.com
-      http_path: /sql/1.0/warehouses/abae422499df211c
+      host: "{{ env_var('DBT_ENV_SECRET_HOST') }}"
+      http_path: "{{ env_var('DBT_ENV_SECRET_HTTP_PATH') }}"
       auth_type: oauth
       threads: 4
 ```
@@ -95,7 +96,9 @@ nfl:
 Point the shell at the CLI profile before any dbt command. If `DATABRICKS_HOST` is set without `https://`, OAuth fails, so the second line fixes that.
 
 ```powershell
-$env:DATABRICKS_CONFIG_PROFILE = "wyatts_databricks"
+if (-not $env:DATABRICKS_CONFIG_PROFILE) {
+  throw "Set DATABRICKS_CONFIG_PROFILE. See .env.example."
+}
 if ($env:DATABRICKS_HOST -and $env:DATABRICKS_HOST -notlike "http*") {
   $env:DATABRICKS_HOST = "https://$($env:DATABRICKS_HOST)"
 }
@@ -225,15 +228,15 @@ The NFL project on dbt platform is linked to this repo. Platform jobs build `mai
 
 ### 7.2 The platform project
 
-Account `wyatts_dbt` (`https://ib010.us1.dbt.com`) allows one active project. A second project named NFL was rejected with "You can only have 1 active project on this plan." The existing Partner Connect project was renamed to **NFL**.
+The account named in `DBT_CLOUD_ACCOUNT_NAME` (`https://` plus `DBT_CLOUD_HOST`) allows one active project. A second project named NFL was rejected with "You can only have 1 active project on this plan." The existing Partner Connect project was renamed to **NFL**.
 
 | | |
 |---|---|
-| Project id | `70506183172586` |
-| Connection | Databricks, host `dbc-89a97ed5-5f7d.cloud.databricks.com`, HTTP path `/sql/1.0/warehouses/abae422499df211c`, catalog `nfl` |
-| Development | environment `70506183161912`, dbt version `fusion-stable` |
-| Deployment | environment `70506183161913`, dbt version `fusion-stable` |
-| Job | `NFL` (`70506183141641`), commands `dbt build`, generate docs on, schedule off |
+| Project id | `DBT_CLOUD_PROJECT_ID` |
+| Connection | Databricks, host `DBT_ENV_SECRET_HOST`, HTTP path `DBT_ENV_SECRET_HTTP_PATH`, catalog `nfl` |
+| Development | environment `DBT_CLOUD_DEV_ENV_ID`, dbt version `fusion-stable` |
+| Deployment | environment `DBT_CLOUD_DEFER_ENV_ID`, dbt version `fusion-stable` |
+| Job | `NFL` (`DBT_CLOUD_JOB_ID`), commands `dbt build`, generate docs on, schedule off |
 | Git | `WyattCurtis327/nfl_dbt_databricks`, branch `main` |
 
 Do not create another project on this plan. A managed Partner Connect repository still exists on the account and is not the project's active repository. `dbt_project.yml` already has `dbt-cloud.project-id` set to this project.
@@ -242,7 +245,7 @@ Development credentials, for the Studio IDE, can be your own Databricks user. OA
 
 ### 7.3 Deployment environment
 
-The deployment environment already exists (`70506183161913`, `fusion-stable`). Do not create a second one. These are the settings if you ever have to recreate it.
+The deployment environment already exists (`DBT_CLOUD_DEFER_ENV_ID`, `fusion-stable`). Do not create a second one. These are the settings if you ever have to recreate it.
 
 1. **Orchestration → Environments → Create new environment**.
 2. Type: **Deployment**.
@@ -279,8 +282,8 @@ You need to be an Owner on a Starter plan, or have the admin permissions listed 
 2. **Semantic Layer → Configure Semantic Layer**.
 3. Select the deployment environment from 7.3. Save.
 4. **Add Semantic Layer credential**. Use a Databricks credential that can **read** `nfl.gold` (and `nfl.silver` / `nfl.bronze` if a metric ever points there). Read-only is enough. Queries run as this credential.
-   - Host: `dbc-89a97ed5-5f7d.cloud.databricks.com`
-   - HTTP path: `/sql/1.0/warehouses/abae422499df211c`
+   - Host: `DBT_ENV_SECRET_HOST`
+   - HTTP path: `DBT_ENV_SECRET_HTTP_PATH`
    - Catalog: `nfl`
 5. **Map new service token**. Permissions: **Semantic Layer Only** and **Metadata Only**. Copy the token once. It is not shown again.
 6. On the project page, copy the environment id, host, and token for whatever tool will query the metrics.
@@ -318,19 +321,21 @@ The job has **no schedule**. `c:\Users\wyatt\grok\dbt_demo` already has a daily 
 Commands, from this folder:
 
 ```powershell
-$env:DATABRICKS_CONFIG_PROFILE = "wyatts_databricks"
-databricks bundle validate --target dev --profile wyatts_databricks
-databricks bundle deploy --target dev --profile wyatts_databricks
-databricks bundle run nfl_job --target dev --profile wyatts_databricks
+if (-not $env:DATABRICKS_CONFIG_PROFILE) {
+  throw "Set DATABRICKS_CONFIG_PROFILE. See .env.example."
+}
+databricks bundle validate --target dev --profile $env:DATABRICKS_CONFIG_PROFILE
+databricks bundle deploy --target dev --profile $env:DATABRICKS_CONFIG_PROFILE
+databricks bundle run nfl_job --target dev --profile $env:DATABRICKS_CONFIG_PROFILE
 ```
 
-A dev deploy is named `[dev wyatt_curtis] nfl_dbt` (the exact prefix uses your workspace user) and is not production.
+A dev deploy is named `[dev <your-user>] nfl_dbt` (the exact prefix uses your workspace user) and is not production.
 
 Production, still with no schedule until you add one:
 
 ```powershell
-databricks bundle deploy --target prod --profile wyatts_databricks
-databricks bundle run nfl_job --target prod --profile wyatts_databricks
+databricks bundle deploy --target prod --profile $env:DATABRICKS_CONFIG_PROFILE
+databricks bundle run nfl_job --target prod --profile $env:DATABRICKS_CONFIG_PROFILE
 ```
 
 To schedule it later, add this under `resources.jobs.nfl_job` in `resources/nfl.job.yml`, then deploy prod again:
@@ -353,7 +358,7 @@ Dev deploys pause that trigger. Prod leaves it on.
 - `dbt build` completed before the semantic YAML move: 13 tables, 45 tests. `PASS=58`, `ERROR=0`. The SQL models did not change in that move.
 - The semantic YAML is the latest spec. A later `dbt parse` on dbt 1.12.5 rewrote `target/semantic_manifest.json` with 2 semantic models (`game_summaries`, `team_performance`), 21 metrics, and 3 saved queries.
 - `databricks bundle validate --target dev` succeeded. The job was not deployed and has no schedule.
-- The dbt platform account `wyatts_dbt` allows one active project. The Partner Connect project was renamed to **NFL** rather than creating a second one. Project id `70506183172586`. Open it at `https://ib010.us1.dbt.com`.
+- The dbt platform account in `DBT_CLOUD_ACCOUNT_NAME` allows one active project. The Partner Connect project was renamed to **NFL** rather than creating a second one. Project id is `DBT_CLOUD_PROJECT_ID`. Open it at `https://` plus `DBT_CLOUD_HOST`.
 - That project already uses this workspace, the Serverless Starter Warehouse, and catalog `nfl`. Its development and deployment environments are on `fusion-stable`. The job named `NFL` runs `dbt build` and generates docs. The schedule is off.
 - This folder is a git repo on branch `main` with origin `https://github.com/WyattCurtis327/nfl_dbt_databricks.git`. The dbt platform project NFL is linked to that repo.
 - `C:\Users\wyatt\.dbt\dbt_cloud.yml` is installed from the credentials file already in Downloads, with the project name set to NFL.
