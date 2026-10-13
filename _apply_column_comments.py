@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-MANIFEST = r"c:\Users\wyatt\grok\dbt_demo2\target\manifest.json"
+MANIFEST = r"c:\Users\wyatt\grok\nfl_dbt_databricks\target\manifest.json"
 BATCH = 20
 
 

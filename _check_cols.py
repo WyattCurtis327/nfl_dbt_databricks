@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-root = Path(r"c:\Users\wyatt\grok\dbt_demo2")
+root = Path(r"c:\Users\wyatt\grok\nfl_dbt_databricks")
 for rel in ("models/bronze/schema.yml", "models/silver/schema.yml", "models/gold/schema.yml", "models/sources.yml", "models/column_docs.md"):
     text = (root / rel).read_text(encoding="utf-8")
     print(rel, "docs", text.count("doc('col_"), "bytes", len(text))

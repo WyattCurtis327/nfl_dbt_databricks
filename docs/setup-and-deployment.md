@@ -55,7 +55,7 @@ Landing tables this project reads:
 
 ## 2. Install the local dbt adapter
 
-From this folder (`c:\Users\wyatt\grok\dbt_demo2`):
+From this folder (`c:\Users\wyatt\grok\nfl_dbt_databricks`):
 
 ```powershell
 python -m venv .venv
@@ -109,7 +109,7 @@ dbt debug
 The dbt platform (formerly dbt Cloud) is a separate login from Databricks. The Cloud CLI config for project NFL is already `C:\Users\wyatt\.dbt\dbt_cloud.yml`. Do not commit it, and do not copy the token into this repo. The VS Code extension does not read that file. Sign in there if the status bar does not already show project `nfl`.
 
 1. Install Visual Studio Code if it is not installed: [https://code.visualstudio.com](https://code.visualstudio.com).
-2. Open this folder: **File → Open Folder** → `c:\Users\wyatt\grok\dbt_demo2`.
+2. Open this folder: **File → Open Folder** → `c:\Users\wyatt\grok\nfl_dbt_databricks`.
 3. Install the recommended extensions when VS Code prompts, or install them yourself:
    - `dbt` from publisher **dbt Labs, LLC** (extension id `dbtLabsInc.dbt`). This is the only extension dbt Labs supports.
    - `Python` from Microsoft (`ms-python.python`).
@@ -218,10 +218,10 @@ dbt platform deploys from a Git repo. This folder is already one. Do not run `gi
 
 | | |
 |---|---|
-| Branch | `dbt_demo4` |
-| Origin | `https://github.com/WyattCurtis327/dbt_demo2.git` |
+| Branch | `main` |
+| Origin | `https://github.com/WyattCurtis327/nfl_dbt_databricks.git` |
 
-Push this branch, then set that GitHub repo as the repository on the NFL project. Until that connection is saved, a platform job does not build this folder.
+The NFL project on dbt platform is linked to this repo. Platform jobs build `main`.
 
 ### 7.2 The platform project
 
@@ -234,7 +234,7 @@ Account `wyatts_dbt` (`https://ib010.us1.dbt.com`) allows one active project. A 
 | Development | environment `70506183161912`, dbt version `fusion-stable` |
 | Deployment | environment `70506183161913`, dbt version `fusion-stable` |
 | Job | `NFL` (`70506183141641`), commands `dbt build`, generate docs on, schedule off |
-| Git | Not connected to `WyattCurtis327/dbt_demo2`. Connect it before a job can build this folder. |
+| Git | `WyattCurtis327/nfl_dbt_databricks`, branch `main` |
 
 Do not create another project on this plan. A managed Partner Connect repository still exists on the account and is not the project's active repository. `dbt_project.yml` already has `dbt-cloud.project-id` set to this project.
 
@@ -355,7 +355,7 @@ Dev deploys pause that trigger. Prod leaves it on.
 - `databricks bundle validate --target dev` succeeded. The job was not deployed and has no schedule.
 - The dbt platform account `wyatts_dbt` allows one active project. The Partner Connect project was renamed to **NFL** rather than creating a second one. Project id `70506183172586`. Open it at `https://ib010.us1.dbt.com`.
 - That project already uses this workspace, the Serverless Starter Warehouse, and catalog `nfl`. Its development and deployment environments are on `fusion-stable`. The job named `NFL` runs `dbt build` and generates docs. The schedule is off.
-- This folder is a git repo on branch `dbt_demo4` with origin `https://github.com/WyattCurtis327/dbt_demo2.git`. The NFL project's repository is not that GitHub repo, so a platform job does not build this folder until you connect it (section 7.1).
+- This folder is a git repo on branch `main` with origin `https://github.com/WyattCurtis327/nfl_dbt_databricks.git`. The dbt platform project NFL is linked to that repo.
 - `C:\Users\wyatt\.dbt\dbt_cloud.yml` is installed from the credentials file already in Downloads, with the project name set to NFL.
 
 ## 10. If something fails
